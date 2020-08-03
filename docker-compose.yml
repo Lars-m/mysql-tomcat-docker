@@ -1,0 +1,40 @@
+version: '3'
+services:
+  db:
+    image: mysql:8.0.17
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: startcode
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: ax2
+    
+    container_name: db-mysql
+
+    ports:
+      - "3307:3306"
+    volumes:
+      - "./db/data:/var/lib/mysql"
+      - "./db:/etc/mysql/conf.d"
+
+  web:
+    image: tomcat:9.0.37-jdk8-openjdk
+    environment:
+      CATALINA_OPTS: "$CATALINA_OPTS -DUSER='dev' -DPW=ax2 -DCONNECTION_STR=jdbc:mysql://db:3306/prod_demo"
+      #JAVA_OPTS: "-DJDBC_URL='jdbc:mysql://db:3306/example_db' -DJDBC_USER=example_db_user -DJDBC_PASS=example_db_pass"
+     
+    container_name: web-tomcat
+
+    # restart: always
+
+    depends_on: 
+      - db
+
+    ports:
+      - "80:8080"
+    volumes:
+      - ./tomcat/webapps:/usr/local/tomcat/webapps
+      - ./tomcat/conf/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+      - ./tomcat/conf/context.xml:/usr/local/tomcat/webapps.dist/manager/META-INF/context.xml
+    
+    # command: sh -c "mv /usr/local/tomcat/webapps /usr/local/tomcat/webapps2; mv /usr/local/tomcat/webapps.dist /usr/local/tomcat/webapps; catalina.sh run"
+    command: sh -c "mv /usr/local/tomcat/webapps.dist/manager /usr/local/tomcat/webapps; catalina.sh run"
